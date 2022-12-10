@@ -1,0 +1,4 @@
+com\apple\mapper\ArticleMapper.class
+com\apple\service\ArticleService.class
+com\apple\service\impl\ArticleServiceImpl.class
+com\apple\domain\entity\Article.class
