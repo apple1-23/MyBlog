@@ -201,9 +201,13 @@ public class RedisCache
         return opsForHash.get(key, hKey);
     }
 
+    public void incrementCacheMapValue(String key,String hKey,int v){
+        redisTemplate.opsForHash().increment(key,hKey,v);
+    }
+
     /**
      * 删除Hash中的数据
-     * 
+     *
      * @param key
      * @param hkey
      */

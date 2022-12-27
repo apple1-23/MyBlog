@@ -1,5 +1,6 @@
 package com.apple.controller;
 
+import com.apple.annotation.SystemLog;
 import com.apple.domain.ResponseResult;
 import com.apple.domain.entity.User;
 import com.apple.service.UserService;
@@ -19,6 +20,7 @@ public class UserController {
     }
 
     @PutMapping("/userInfo")
+    @SystemLog(businessName = "更新用户信息")
     public ResponseResult updateUserInfo(@RequestBody User user){
         return userService.updateUserInfo(user);
     }
