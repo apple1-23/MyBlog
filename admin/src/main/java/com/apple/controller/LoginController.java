@@ -2,8 +2,10 @@ package com.apple.controller;
 
 import com.apple.domain.ResponseResult;
 import com.apple.domain.entity.LoginUser;
+import com.apple.domain.entity.Menu;
 import com.apple.domain.entity.User;
 import com.apple.domain.vo.AdminUserInfoVo;
+import com.apple.domain.vo.RoutersVo;
 import com.apple.domain.vo.UserInfoVo;
 import com.apple.enums.AppHttpCodeEnum;
 import com.apple.exception.SystemException;
@@ -58,5 +60,14 @@ public class LoginController {
         AdminUserInfoVo adminUserInfoVo = new AdminUserInfoVo(perms,roleKeyList,userInfoVo);
         return ResponseResult.okResult(adminUserInfoVo);
 
+    }
+
+    @GetMapping("getRouters")
+    public ResponseResult<RoutersVo> getRouters(){
+        Long userId = SecurityUtils.getUserId();
+        //查询menu 结果是tree的形式
+        List<Menu> menus = menuService.selectRouterMenuTreeByUserId(userId);
+        //封装数据返回
+        return ResponseResult.okResult(new RoutersVo(menus));
     }
 }

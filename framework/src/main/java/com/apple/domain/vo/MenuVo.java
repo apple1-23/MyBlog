@@ -1,12 +1,10 @@
-package com.apple.domain.entity;
+package com.apple.domain.vo;
 
-import com.baomidou.mybatisplus.annotation.TableField;
+import com.apple.domain.entity.Menu;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
 
 import java.util.Date;
 import java.util.List;
@@ -14,12 +12,9 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("sys_menu")
-@Accessors(chain = true)
-public class Menu {
+public class MenuVo {
 
     //菜单id
-    @TableId
     private Long id;
 
     //菜单名称
@@ -49,20 +44,10 @@ public class Menu {
     //菜单状态（0正常 1停用）
     private String status;
 
-    //权限标识
-    private String perms;
-
     //菜单图标
     private String icon;
 
-    private Long createBy;
     private Date createTime;
-    private Long updateBy;
-    private Date updateTime;
-    //删除标志（0代表未删除，1代表已删除）
-    private Integer delFlag;
-    private String remark;
 
-    @TableField(exist = false)
     private List<Menu> children;
 }
