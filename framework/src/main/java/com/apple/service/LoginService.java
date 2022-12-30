@@ -6,4 +6,5 @@ import com.apple.domain.entity.User;
 public interface LoginService {
     ResponseResult login(User user);
 
+    ResponseResult logout();
 }

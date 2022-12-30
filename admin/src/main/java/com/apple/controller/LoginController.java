@@ -14,6 +14,7 @@ import com.apple.service.LoginService;
 import com.apple.service.MenuService;
 import com.apple.service.RoleService;
 import com.apple.utils.BeanCopyUtils;
+import com.apple.utils.RedisCache;
 import com.apple.utils.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -36,6 +37,9 @@ public class LoginController {
     @Autowired
     private RoleService roleService;
 
+    @Autowired
+    private RedisCache redisCache;
+
     @PostMapping("/user/login")
     public ResponseResult login(@RequestBody User user){
         if(!StringUtils.hasText(user.getUserName())){
@@ -43,6 +47,11 @@ public class LoginController {
             throw new SystemException(AppHttpCodeEnum.REQUIRE_USERNAME);
         }
         return loginService.login(user);
+    }
+
+    @PostMapping("/user/logout")
+    public ResponseResult logout(){
+        return loginService.logout();
     }
 
     @GetMapping("getInfo")
