@@ -1,6 +1,7 @@
 package com.apple.service;
 
 import com.apple.domain.ResponseResult;
+import com.apple.domain.dto.AddArticleDto;
 import com.apple.domain.entity.Article;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -12,4 +13,6 @@ public interface ArticleService extends IService<Article> {
     ResponseResult getArticleDetail(Long id);
 
     ResponseResult updateViewCount(Long id);
+
+    ResponseResult addArticle(AddArticleDto article);
 }

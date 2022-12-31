@@ -17,6 +17,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+
 @Service("tagService")
 public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagService {
 
@@ -101,5 +103,16 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     public ResponseResult updateTag(Tag tag) {
         getBaseMapper().updateById(tag);
         return ResponseResult.okResult();
+    }
+
+    /**
+     * 查询所有tag列表
+     * @return
+     */
+    @Override
+    public ResponseResult<TagVo> listAllTag() {
+        List<Tag> tags = list();
+        List<TagVo> tagVos = BeanCopyUtils.copyBeanList(tags, TagVo.class);
+        return ResponseResult.okResult(tagVos);
     }
 }

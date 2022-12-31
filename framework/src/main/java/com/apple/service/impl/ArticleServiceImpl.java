@@ -2,7 +2,9 @@ package com.apple.service.impl;
 
 import com.apple.constants.SystemConstants;
 import com.apple.domain.ResponseResult;
+import com.apple.domain.dto.AddArticleDto;
 import com.apple.domain.entity.Article;
+import com.apple.domain.entity.ArticleTag;
 import com.apple.domain.entity.Category;
 import com.apple.domain.vo.ArticleDetailVo;
 import com.apple.domain.vo.ArticleListVo;
@@ -10,6 +12,7 @@ import com.apple.domain.vo.HotArticleVo;
 import com.apple.domain.vo.PageVo;
 import com.apple.mapper.ArticleMapper;
 import com.apple.service.ArticleService;
+import com.apple.service.ArticleTagService;
 import com.apple.service.CategoryService;
 import com.apple.utils.BeanCopyUtils;
 import com.apple.utils.RedisCache;
@@ -19,6 +22,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +38,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    private ArticleTagService articleTagService;
 
     @Override
     public ResponseResult hotArticleList() {
@@ -120,10 +127,36 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         return ResponseResult.okResult(articleDetailVo);
     }
 
+    /**
+     * 更新浏览量
+     * @param id
+     * @return
+     */
     @Override
     public ResponseResult updateViewCount(Long id) {
         //更新redis中对应 id的浏览量
         redisCache.incrementCacheMapValue("article:viewCount",id.toString(),1);
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 新增文章
+     * @param article
+     * @return
+     */
+    @Override
+    @Transactional
+    public ResponseResult addArticle(AddArticleDto article) {
+        //添加 博客
+        Article article1 = BeanCopyUtils.copyBean(article, Article.class);
+        save(article1);
+
+        //添加 博客和标签的关联
+        for (Long tag : article.getTags()) {
+            //注意是添加完文章后，才有id
+            articleTagService.save(new ArticleTag(article1.getId(), tag));
+        }
+
         return ResponseResult.okResult();
     }
 }

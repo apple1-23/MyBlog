@@ -70,4 +70,9 @@ public class TagController {
         Tag tag = BeanCopyUtils.copyBean(tagVo, Tag.class);
         return tagService.updateTag(tag);
     }
+
+    @GetMapping("/listAllTag")
+    public ResponseResult<TagVo> listAllTag(){
+        return tagService.listAllTag();
+    }
  }
