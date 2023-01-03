@@ -10,6 +10,8 @@ import com.apple.domain.vo.ArticleDetailVo;
 import com.apple.domain.vo.ArticleListVo;
 import com.apple.domain.vo.HotArticleVo;
 import com.apple.domain.vo.PageVo;
+import com.apple.enums.AppHttpCodeEnum;
+import com.apple.exception.SystemException;
 import com.apple.mapper.ArticleMapper;
 import com.apple.service.ArticleService;
 import com.apple.service.ArticleTagService;
@@ -23,10 +25,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -157,6 +158,112 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             articleTagService.save(new ArticleTag(article1.getId(), tag));
         }
 
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 分页查询文章列表
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @param title 文章标题
+     * @param summary 文章摘要
+     * @return
+     */
+    @Override
+    public ResponseResult<PageVo> list(Integer pageNum, Integer pageSize, String title, String summary) {
+        LambdaQueryWrapper<Article> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //对文章标题模糊查询
+        lambdaQueryWrapper.like(StringUtils.hasText(title),Article::getTitle,title);
+        //对文章摘要模糊查询
+        lambdaQueryWrapper.like(StringUtils.hasText(summary),Article::getSummary,summary);
+        Page<Article> page = new Page<>();
+        page.setCurrent(pageNum);
+        page.setSize(pageSize);
+        page(page,lambdaQueryWrapper);
+        PageVo pageVo = new PageVo(page.getRecords(),page.getTotal());
+        return ResponseResult.okResult(pageVo);
+    }
+
+    /**
+     * 根据id查文章详情（包括tags）
+     * @param id
+     * @return
+     */
+    @Override
+    public ResponseResult<AddArticleDto> getArticleById(Long id) {
+        if(id == null){
+            throw new SystemException(AppHttpCodeEnum.ID_NOT_NULL);
+        }
+        //查询tags
+        LambdaQueryWrapper<ArticleTag> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(ArticleTag::getArticleId,id);
+        List<ArticleTag> articleTags = articleTagService.getBaseMapper().selectList(lambdaQueryWrapper);
+        List<Long> tags = articleTags.stream()
+                .map(ArticleTag::getTagId)
+                .collect(Collectors.toList());
+        //查询article
+        Article article = getById(id);
+        //封装返回
+        if(article != null){
+            AddArticleDto dto = BeanCopyUtils.copyBean(article, AddArticleDto.class);
+            dto.setTags(tags);
+            return ResponseResult.okResult(dto);
+        }
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 修改文章
+     * @param addArticleDto
+     * @return
+     */
+    @Override
+    @Transactional
+    public ResponseResult updateArticle(AddArticleDto addArticleDto) {
+        //根据id更新文章
+        Article article = BeanCopyUtils.copyBean(addArticleDto, Article.class);
+        update(article,new LambdaQueryWrapper<Article>().eq(Article::getId,addArticleDto.getId()));
+        //查询原关联
+        LambdaQueryWrapper<ArticleTag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ArticleTag::getArticleId,addArticleDto.getId());
+        List<ArticleTag> articleTags = articleTagService.getBaseMapper().selectList(queryWrapper);
+        //删除原关联
+        for (ArticleTag tag : articleTags) {
+            LambdaQueryWrapper<ArticleTag> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.eq(ArticleTag::getArticleId,tag.getArticleId());
+            lambdaQueryWrapper.eq(ArticleTag::getTagId,tag.getTagId());
+            articleTagService.getBaseMapper().delete(lambdaQueryWrapper);
+        }
+        //添加新关联
+        for (Long tag : addArticleDto.getTags()) {
+            articleTagService.save(new ArticleTag(addArticleDto.getId(),tag));
+        }
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 根据id删除文章
+     * @param id
+     * @return
+     */
+    @Override
+    @Transactional
+    public ResponseResult deleteArticle(Long id) {
+        if(id == null){
+            throw new SystemException(AppHttpCodeEnum.ID_NOT_NULL);
+        }
+        getBaseMapper().deleteById(id);
+        //查询原关联
+        LambdaQueryWrapper<ArticleTag> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ArticleTag::getArticleId,id);
+        List<ArticleTag> articleTags = articleTagService.getBaseMapper().selectList(queryWrapper);
+        //删除原关联
+        for (ArticleTag tag : articleTags) {
+            LambdaQueryWrapper<ArticleTag> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.eq(ArticleTag::getArticleId,tag.getArticleId());
+            lambdaQueryWrapper.eq(ArticleTag::getTagId,tag.getTagId());
+            articleTagService.getBaseMapper().delete(lambdaQueryWrapper);
+        }
         return ResponseResult.okResult();
     }
 }
