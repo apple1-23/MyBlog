@@ -1,23 +1,18 @@
-package com.apple.domain.entity;
+package com.apple.domain.dto;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
 
 import java.util.Date;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("sys_menu")
-@Accessors(chain = true)
-public class Menu {
+public class AddMenuDto {
 
     //菜单id
     @TableId
@@ -56,18 +51,11 @@ public class Menu {
     //菜单图标
     private String icon;
 
-    @TableField(fill = FieldFill.INSERT)
     private Long createBy;
-    @TableField(fill = FieldFill.INSERT)
     private Date createTime;
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateBy;
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
     //删除标志（0代表未删除，1代表已删除）
     private Integer delFlag;
     private String remark;
-
-    @TableField(exist = false)
-    private List<Menu> children;
 }

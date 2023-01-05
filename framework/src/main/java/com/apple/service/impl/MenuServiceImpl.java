@@ -1,13 +1,18 @@
 package com.apple.service.impl;
 
 import com.apple.constants.SystemConstants;
+import com.apple.domain.ResponseResult;
 import com.apple.domain.entity.Menu;
+import com.apple.domain.vo.MenuListVo;
+import com.apple.enums.AppHttpCodeEnum;
 import com.apple.mapper.MenuMapper;
 import com.apple.service.MenuService;
+import com.apple.utils.BeanCopyUtils;
 import com.apple.utils.SecurityUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +52,68 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         List<Menu> menuTree = builderMenuTree(menus,0L);
 
         return menuTree;
+    }
+
+    /**
+     * 菜单列表
+     * @param status 状态
+     * @param menuName 菜单名称
+     * @return
+     */
+    @Override
+    public ResponseResult getList(String status, String menuName) {
+        LambdaQueryWrapper<Menu> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.like(StringUtils.hasText(status),Menu::getStatus,status);
+        lambdaQueryWrapper.like(StringUtils.hasText(menuName),Menu::getMenuName,menuName);
+        lambdaQueryWrapper.orderByAsc(Menu::getParentId,Menu::getOrderNum);
+        List<Menu> menus = list(lambdaQueryWrapper);
+        List<MenuListVo> menuListVos = BeanCopyUtils.copyBeanList(menus, MenuListVo.class);
+        return ResponseResult.okResult(menuListVos);
+    }
+
+    /**
+     * 新增菜单
+     * @param menu
+     * @return
+     */
+    @Override
+    public ResponseResult addMenu(Menu menu) {
+        save(menu);
+        return ResponseResult.okResult();
+    }
+
+    /**
+     * 修改菜单
+     * @param menu
+     * @return
+     */
+    @Override
+    public ResponseResult updateMenu(Menu menu) {
+        Menu origin = getById(menu.getId());
+        if(menu.getParentId().equals(menu.getId())){
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR,
+                    "修改菜单'"+origin.getMenuName()+"'失败，上级菜单不能选择自己");
+        }else {
+            updateById(menu);
+            return ResponseResult.okResult();
+        }
+    }
+
+    /**
+     * 删除菜单
+     * @param menuId
+     * @return
+     */
+    @Override
+    public ResponseResult deleteMenu(Long menuId) {
+        Menu origin = getById(menuId);
+        if(getChildren(origin,list()).size() > 0){
+            return ResponseResult.errorResult(AppHttpCodeEnum.SYSTEM_ERROR,
+                    "存在子菜单不允许删除");
+        }else {
+            getBaseMapper().deleteById(menuId);
+            return ResponseResult.okResult();
+        }
     }
 
     /**
