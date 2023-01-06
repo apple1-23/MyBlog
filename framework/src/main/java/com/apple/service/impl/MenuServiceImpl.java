@@ -3,22 +3,32 @@ package com.apple.service.impl;
 import com.apple.constants.SystemConstants;
 import com.apple.domain.ResponseResult;
 import com.apple.domain.entity.Menu;
+import com.apple.domain.entity.RoleMenu;
 import com.apple.domain.vo.MenuListVo;
+import com.apple.domain.vo.MenuVos;
+import com.apple.domain.vo.RoleMenuTreeVo;
 import com.apple.enums.AppHttpCodeEnum;
 import com.apple.mapper.MenuMapper;
+import com.apple.mapper.RoleMenuMapper;
 import com.apple.service.MenuService;
 import com.apple.utils.BeanCopyUtils;
 import com.apple.utils.SecurityUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service("menuService")
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements MenuService {
+
+    @Autowired
+    private RoleMenuMapper roleMenuMapper;
+
     @Override
     public List<String> selectPermsByUserId(Long id) {
         //如果是管理员，返回所有的权限
@@ -114,6 +124,74 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
             getBaseMapper().deleteById(menuId);
             return ResponseResult.okResult();
         }
+    }
+
+    /**
+     * 菜单树
+     * @return
+     */
+    @Override
+    public ResponseResult treeSelect() {
+        //所有菜单
+        List<Menu> menus = getBaseMapper().selectAllMenu();
+        List<MenuVos> vos = new ArrayList<>();
+        for (Menu menu : menus) {
+            MenuVos menuVos = BeanCopyUtils.copyProperties(menu, MenuVos.class);
+            vos.add(menuVos);
+        }
+        //构建tree
+        List<MenuVos> menuTree = builderMenuVoTree(vos,0L);
+
+        return ResponseResult.okResult(menuTree);
+    }
+
+    /**
+     * 通过角色id查询菜单树
+     * @param id
+     * @return
+     */
+    @Override
+    public ResponseResult<RoleMenuTreeVo> getRoleMenuTree(Long id) {
+        LambdaQueryWrapper<RoleMenu> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(RoleMenu::getRoleId,id);
+        List<RoleMenu> roleMenus = roleMenuMapper.selectList(lambdaQueryWrapper);
+        //提取角色关联的菜单id
+        List<Long> menuIds = roleMenus.stream()
+                .map(RoleMenu::getMenuId)
+                .collect(Collectors.toList());
+
+        //所有菜单树
+        //所有菜单
+        List<Menu> menus = getBaseMapper().selectAllMenu();
+        List<MenuVos> vos = new ArrayList<>();
+        for (Menu menu : menus) {
+            MenuVos menuVos = BeanCopyUtils.copyProperties(menu, MenuVos.class);
+            vos.add(menuVos);
+        }
+        //构建tree
+        List<MenuVos> menuTree = builderMenuVoTree(vos,0L);
+
+
+        RoleMenuTreeVo roleMenuTreeVo = new RoleMenuTreeVo();
+        roleMenuTreeVo.setCheckedKeys(menuIds);
+        roleMenuTreeVo.setMenus(menuTree);
+        return ResponseResult.okResult(roleMenuTreeVo);
+    }
+
+    private List<MenuVos> builderMenuVoTree(List<MenuVos> menus, long l) {
+        List<MenuVos> collect = menus.stream()
+                .filter(menu -> menu.getParentId().equals(l))
+                .map(menu -> menu.setChildren(getMenuVoChildren(menu,menus)))
+                .collect(Collectors.toList());
+        return collect;
+    }
+
+    private List<MenuVos> getMenuVoChildren(MenuVos menu,List<MenuVos> menus) {
+        List<MenuVos> vosList = menus.stream()
+                .filter(menu1 -> menu1.getParentId().equals(menu.getId()))
+                .map(m -> m.setChildren(getMenuVoChildren(m, menus)))
+                .collect(Collectors.toList());
+        return vosList;
     }
 
     /**

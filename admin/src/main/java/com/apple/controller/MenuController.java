@@ -4,6 +4,7 @@ import com.apple.domain.ResponseResult;
 import com.apple.domain.dto.AddMenuDto;
 import com.apple.domain.entity.Menu;
 import com.apple.domain.vo.MenuListVo;
+import com.apple.domain.vo.RoleMenuTreeVo;
 import com.apple.service.MenuService;
 import com.apple.utils.BeanCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,8 +60,28 @@ public class MenuController {
         return menuService.updateMenu(menu);
     }
 
+    /**
+     * 删除菜单
+     * @param menuId
+     * @return
+     */
     @DeleteMapping("/{menuId}")
     public ResponseResult deleteMenu(@PathVariable Long menuId){
         return menuService.deleteMenu(menuId);
     }
+
+    /**
+     * 所有菜单树
+     * @return
+     */
+    @GetMapping("/treeselect")
+    public ResponseResult treeMenu(){
+        return menuService.treeSelect();
+    }
+
+    @GetMapping("roleMenuTreeselect/{id}")
+    public ResponseResult<RoleMenuTreeVo> getRoleMenuTree(@PathVariable Long id){
+        return menuService.getRoleMenuTree(id);
+    }
+
 }
