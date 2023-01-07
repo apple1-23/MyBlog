@@ -16,4 +16,6 @@ public class UserInfoVo {
     private String sex;
 
     private String email;
+
+    private String status;
 }

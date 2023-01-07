@@ -1,9 +1,6 @@
-package com.apple.domain.entity;
+package com.apple.domain.vo;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,8 +10,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("sys_user")
-public class User {
+public class UserListVo {
 
     //主键
     @TableId
@@ -25,12 +21,6 @@ public class User {
 
     //昵称
     private String nickName;
-
-    //密码
-    private String password;
-
-    //用户类型：（0代表普通用户，1代表管理员）
-    private String type;
 
     //账号状态（0正常，1停用）
     private String status;
@@ -47,23 +37,12 @@ public class User {
     //头像
     private String avatar;
 
-    //创建人的用户id
-    @TableField(fill = FieldFill.INSERT)
-    private Long createBy;
-
     //创建时间
-    @TableField(fill = FieldFill.INSERT)
     private Date createTime;
 
     //更新人
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateBy;
 
     //更新时间
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
-
-    //删除标志（0代表未删除，1代表已删除）
-    private Integer delFlag;
-
 }

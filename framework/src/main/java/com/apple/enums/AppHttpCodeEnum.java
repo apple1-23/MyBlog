@@ -22,7 +22,9 @@ public enum AppHttpCodeEnum {
 
     TAG_REMARK_NOT_NULL(514,"标签备注不能为空"),
 
-    ID_NOT_NULL(515,"主键不能为空");
+    ID_NOT_NULL(515,"主键不能为空"),
+
+    PHONENUMBER_NOT_NULL(516,"手机号不能为空");
 
     int code;
     String msg;

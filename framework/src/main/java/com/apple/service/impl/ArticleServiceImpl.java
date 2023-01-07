@@ -223,17 +223,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         //根据id更新文章
         Article article = BeanCopyUtils.copyBean(addArticleDto, Article.class);
         update(article,new LambdaQueryWrapper<Article>().eq(Article::getId,addArticleDto.getId()));
-        //查询原关联
-        LambdaQueryWrapper<ArticleTag> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ArticleTag::getArticleId,addArticleDto.getId());
-        List<ArticleTag> articleTags = articleTagService.getBaseMapper().selectList(queryWrapper);
         //删除原关联
-        for (ArticleTag tag : articleTags) {
-            LambdaQueryWrapper<ArticleTag> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-            lambdaQueryWrapper.eq(ArticleTag::getArticleId,tag.getArticleId());
-            lambdaQueryWrapper.eq(ArticleTag::getTagId,tag.getTagId());
-            articleTagService.getBaseMapper().delete(lambdaQueryWrapper);
-        }
+        LambdaQueryWrapper<ArticleTag> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(ArticleTag::getArticleId,addArticleDto.getId());
         //添加新关联
         for (Long tag : addArticleDto.getTags()) {
             articleTagService.save(new ArticleTag(addArticleDto.getId(),tag));
@@ -253,17 +245,11 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
             throw new SystemException(AppHttpCodeEnum.ID_NOT_NULL);
         }
         getBaseMapper().deleteById(id);
-        //查询原关联
-        LambdaQueryWrapper<ArticleTag> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ArticleTag::getArticleId,id);
-        List<ArticleTag> articleTags = articleTagService.getBaseMapper().selectList(queryWrapper);
         //删除原关联
-        for (ArticleTag tag : articleTags) {
-            LambdaQueryWrapper<ArticleTag> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-            lambdaQueryWrapper.eq(ArticleTag::getArticleId,tag.getArticleId());
-            lambdaQueryWrapper.eq(ArticleTag::getTagId,tag.getTagId());
-            articleTagService.getBaseMapper().delete(lambdaQueryWrapper);
-        }
+        LambdaQueryWrapper<ArticleTag> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(ArticleTag::getArticleId,id);
+        articleTagService.getBaseMapper().delete(lambdaQueryWrapper);
+
         return ResponseResult.okResult();
     }
 }

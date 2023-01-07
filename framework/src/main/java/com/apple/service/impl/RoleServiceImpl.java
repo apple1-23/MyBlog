@@ -1,5 +1,6 @@
 package com.apple.service.impl;
 
+import com.apple.constants.SystemConstants;
 import com.apple.domain.ResponseResult;
 import com.apple.domain.dto.AddMenuDto;
 import com.apple.domain.dto.AddRoleDto;
@@ -101,21 +102,10 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     public ResponseResult updateRole(AddRoleDto roleDto) {
         Role role = BeanCopyUtils.copyBean(roleDto, Role.class);
         updateById(role);
-
-        //查询原关联
-        LambdaQueryWrapper<RoleMenu> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(RoleMenu::getRoleId,roleDto.getId());
-        List<RoleMenu> roleMenus = roleMenuMapper.selectList(queryWrapper);
-        List<Long> menuIds = roleMenus.stream()
-                .map(RoleMenu::getMenuId)
-                .collect(Collectors.toList());
         //删除原关联
-        for (Long menuId : menuIds) {
-            LambdaQueryWrapper<RoleMenu> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-            lambdaQueryWrapper.eq(RoleMenu::getMenuId,menuId);
-            roleMenuMapper.delete(lambdaQueryWrapper);
-        }
-
+        LambdaQueryWrapper<RoleMenu> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(RoleMenu::getRoleId,role.getId());
+        roleMenuMapper.delete(lambdaQueryWrapper);
         //添加角色-菜单关联
         for (Long menuId : roleDto.getMenuIds()) {
             roleMenuMapper.insert(new RoleMenu(role.getId(),menuId));
@@ -133,20 +123,24 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     @Transactional
     public ResponseResult deleteRole(Long id) {
         getBaseMapper().deleteById(id);
-
-        //查询原关联
-        LambdaQueryWrapper<RoleMenu> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(RoleMenu::getRoleId,id);
-        List<RoleMenu> roleMenus = roleMenuMapper.selectList(queryWrapper);
-        List<Long> menuIds = roleMenus.stream()
-                .map(RoleMenu::getMenuId)
-                .collect(Collectors.toList());
         //删除原关联
-        for (Long menuId : menuIds) {
-            LambdaQueryWrapper<RoleMenu> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-            lambdaQueryWrapper.eq(RoleMenu::getMenuId,menuId);
-            roleMenuMapper.delete(lambdaQueryWrapper);
-        }
+        LambdaQueryWrapper<RoleMenu> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(RoleMenu::getRoleId,id);
+        roleMenuMapper.delete(lambdaQueryWrapper);
+
         return ResponseResult.okResult();
+    }
+
+    /**
+     * 查询全部角色
+     * @return
+     */
+    @Override
+    public ResponseResult listAllRole() {
+        LambdaQueryWrapper<Role> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(Role::getStatus, SystemConstants.STATUS_NORMAL);
+        List<Role> list = list(lambdaQueryWrapper);
+
+        return ResponseResult.okResult(list);
     }
 }

@@ -62,9 +62,23 @@ public class RoleController {
         return roleService.updateRole(roleDto);
     }
 
+    /**
+     * 删除角色
+     * @param id
+     * @return
+     */
     @DeleteMapping("{id}")
     public ResponseResult deleteRole(@PathVariable Long id){
         return roleService.deleteRole(id);
+    }
+
+    /**
+     * 查询全部角色
+     * @return
+     */
+    @GetMapping("/listAllRole")
+    public ResponseResult listAllRole(){
+        return roleService.listAllRole();
     }
 
 }
